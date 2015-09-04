@@ -1,0 +1,26 @@
+<resources>
+    <string name="app_name">ClassManager</string>
+
+    <string name="title_section1">Section 1</string>
+    <string name="title_section2">Section 2</string>
+    <string name="title_section3">Section 3</string>
+
+    <string name="navigation_drawer_open">Open navigation drawer</string>
+    <string name="navigation_drawer_close">Close navigation drawer</string>
+
+    <string name="action_example">Example action</string>
+
+    <string name="action_settings">Settings</string>
+    <string name="title_activity_login">login</string>
+
+
+
+    <string-array name="sidebar_list">
+        <item>1111</item>
+        <item>2222</item>
+        <item>3333</item>
+        <item>4444</item>
+    </string-array>
+
+    <string name="user_data">storage</string>
+</resources>

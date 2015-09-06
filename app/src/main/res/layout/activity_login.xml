@@ -40,7 +40,7 @@
         android:layout_below="@+id/password"
         android:layout_alignRight="@+id/password"
         android:layout_alignEnd="@+id/password"
-        android:onClick="doLogin"
+        android:onClick="DoLogin"
         android:textColor="#3e72ff" />
 
     <TextView
@@ -50,9 +50,10 @@
         android:text="Class Manager"
         android:id="@+id/textView"
         android:textSize="40dp"
+        android:layout_marginTop="82dp"
+        android:textColor="#3e72ff"
+        android:textStyle="bold"
         android:layout_alignParentTop="true"
-        android:layout_centerHorizontal="true"
-        android:layout_marginTop="54dp"
-        android:textColor="#3e72ff" />
+        android:layout_centerHorizontal="true" />
 
 </RelativeLayout>

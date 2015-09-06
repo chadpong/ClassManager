@@ -1,6 +1,7 @@
 <resources>
 
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorControlNormal">#000000</item>
     </style>
 
     <style name="LoginTheme" parent="Theme.AppCompat.Light.NoActionBar">
@@ -9,7 +10,25 @@
         <item name="colorControlHighlight">#3e72ff</item>
     </style>
 
-    <!-- -->
+
+    <style name="ProgressTheme" parent="Theme.AppCompat.Light.Dialog">
+        <item name="colorControlActivated">#3e72ff</item>
+        <item name="colorControlHighlight">#3e72ff</item>
+        <item name="colorControlNormal">#c5c5c5</item>
+        <item name="android:textColorAlertDialogListItem">#c5c5c5</item>
+    </style>
+
+
+
+    <style name="ThemedDialog" parent="Theme.AppCompat.Light.Dialog.Alert">
+        <item name="android:borderlessButtonStyle">@style/DialogButton</item>
+    </style>
+
+    <style name="DialogButton" parent="@android:style/Widget.Holo.Button.Borderless">
+        <item name="android:textColor">@android:color/holo_blue_light</item>
+    </style>
+
+
 
 
 </resources>

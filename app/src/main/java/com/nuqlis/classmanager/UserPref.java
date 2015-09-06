@@ -1,8 +1,8 @@
 package com.nuqlis.classmanager;
 import android.content.SharedPreferences;
 
-/**
- * Created by Chadpong on 4/9/2558.
+/*
+UserPref -> Manage stored User data eg. username, login-status, role, class ,etc.
  */
 public class UserPref {
     private SharedPreferences sharedPref;
@@ -13,19 +13,21 @@ public class UserPref {
          editor = this.sharedPref.edit();
     }
 
-    public void Login (String username , String staffID) {
+    public void Login (String staffID, String hostID) {
         editor.putBoolean("isLoggedIn", true);
-        editor.putString("username", username);
         editor.putString("staffID", staffID );
+        editor.putString("hostID", hostID);
         editor.commit();
     }
 
-    public String GetUsername () {
-        return sharedPref.getString("username", "");
-    }
-
+    public String GetHostID () { return  sharedPref.getString("hostID", ""); }
     public String GetStaffID () {
         return sharedPref.getString("staffID", "");
+    }
+
+    public void ClearUserPref () {
+        editor.clear();
+        editor.commit();
     }
 
     public boolean IsLoggedIn() {

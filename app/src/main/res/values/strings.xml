@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">ClassManager</string>
 
-    <string name="title_section1">Section 1</string>
+    <string name="title_section1">เช็คชื่อ</string>
     <string name="title_section2">Section 2</string>
     <string name="title_section3">Section 3</string>
 
@@ -12,15 +12,19 @@
 
     <string name="action_settings">Settings</string>
     <string name="title_activity_login">login</string>
-
-
-
-    <string-array name="sidebar_list">
-        <item>1111</item>
-        <item>2222</item>
-        <item>3333</item>
-        <item>4444</item>
-    </string-array>
-
     <string name="user_data">storage</string>
+    <string name="title_item_list">Items</string>
+    <string name="title_item_detail">Item Detail</string>
+    <string name="title_activity_classroom_activity">classroom_activity</string>
+
+    <string name="hello_world">Hello world!</string>
+    <string name="title_activity_test_activity">test_activity</string>
+    <string name="title_activity_roll_activity">roll_activity</string>
+
+    <string-array name="attend_type">
+        <item>มา</item>
+        <item>ลา</item>
+        <item>ป่วย</item>
+        <item>ขาด</item>
+    </string-array>
 </resources>

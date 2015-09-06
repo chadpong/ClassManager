@@ -14,6 +14,5 @@ public class sync_fragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState){
         v = inflater.inflate(R.layout.sync_layout, container);
         return super.onCreateView(inflater, container, savedInstanceState);
-
     }
 }

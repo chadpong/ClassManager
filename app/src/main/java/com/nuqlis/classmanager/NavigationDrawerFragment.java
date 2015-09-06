@@ -1,10 +1,13 @@
 package com.nuqlis.classmanager;
 
+import android.graphics.Color;
+import android.graphics.drawable.ColorDrawable;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.app.Activity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
-import android.support.v4.app.ActionBarDrawerToggle;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.widget.DrawerLayout;
 import android.content.SharedPreferences;
@@ -21,6 +24,10 @@ import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
 import android.widget.Toast;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Fragment used for managing interactions for and presentation of a navigation drawer.
@@ -93,18 +100,38 @@ public class NavigationDrawerFragment extends Fragment {
                 R.layout.fragment_navigation_drawer, container, false);
         mDrawerListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                selectItem(position);
+            public void onItemClick(AdapterView<?> parent, View view, final int position, long id) {
+                mDrawerLayout.closeDrawer(mFragmentContainerView);
+                new Handler().postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        selectItem(position);
+                    }
+                }, 200);
+
             }
         });
+        ArrayList<DrawerModel> data = new ArrayList<DrawerModel>();
+
+        data.add(new DrawerModel(R.drawable.ic_sync,"ซิงค์ข้อมูล"));
+        data.add(new DrawerModel(R.drawable.ic_classroom,"เช็คชื่อ"));
+        data.add(new DrawerModel(R.drawable.ic_logout,"ออกจากระบบ"));
+
+
+        DrawerAdapter adapter = new DrawerAdapter(getActivity(), data);
+        mDrawerListView.setAdapter(adapter);
+
+        /*
         mDrawerListView.setAdapter(new ArrayAdapter<String>(
                 getActionBar().getThemedContext(),
-                android.R.layout.simple_list_item_activated_1,
-                android.R.id.text1,
+                R.layout.drawer_layout,
+                R.id.label,
                 getResources().getStringArray(R.array.sidebar_list)));
         mDrawerListView.setItemChecked(mCurrentSelectedPosition, true);
+        */
         return mDrawerListView;
     }
+
 
     public boolean isDrawerOpen() {
         return mDrawerLayout != null && mDrawerLayout.isDrawerOpen(mFragmentContainerView);
@@ -122,18 +149,19 @@ public class NavigationDrawerFragment extends Fragment {
 
         // set a custom shadow that overlays the main content when the drawer opens
         mDrawerLayout.setDrawerShadow(R.drawable.drawer_shadow, GravityCompat.START);
+
         // set up the drawer's list view with items and click listener
 
-        ActionBar actionBar = getActionBar();
+        final ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
-
+        actionBar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#3e72ff")));
+        // actionBar.setElevation(1);
         // ActionBarDrawerToggle ties together the the proper interactions
         // between the navigation drawer and the action bar app icon.
         mDrawerToggle = new ActionBarDrawerToggle(
                 getActivity(),                    /* host Activity */
-                mDrawerLayout,                    /* DrawerLayout object */
-                R.drawable.ic_drawer,             /* nav drawer image to replace 'Up' caret */
+                mDrawerLayout,                    /* nav drawer image to replace 'Up' caret */
                 R.string.navigation_drawer_open,  /* "open drawer" description for accessibility */
                 R.string.navigation_drawer_close  /* "close drawer" description for accessibility */
         ) {
@@ -145,6 +173,7 @@ public class NavigationDrawerFragment extends Fragment {
                 }
 
                 getActivity().supportInvalidateOptionsMenu(); // calls onPrepareOptionsMenu()
+                this.syncState();
             }
 
             @Override
@@ -164,6 +193,7 @@ public class NavigationDrawerFragment extends Fragment {
                 }
 
                 getActivity().supportInvalidateOptionsMenu(); // calls onPrepareOptionsMenu()
+                this.syncState();
             }
         };
 
@@ -269,5 +299,15 @@ public class NavigationDrawerFragment extends Fragment {
          * Called when an item in the navigation drawer is selected.
          */
         void onNavigationDrawerItemSelected(int position);
+    }
+
+    public int getResourceId(String pVariableName, String pResourcename, String pPackageName)
+    {
+        try {
+            return getResources().getIdentifier(pVariableName, pResourcename, pPackageName);
+        } catch (Exception e) {
+            e.printStackTrace();
+            return -1;
+        }
     }
 }

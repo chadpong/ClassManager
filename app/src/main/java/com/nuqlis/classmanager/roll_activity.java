@@ -2,19 +2,24 @@ package com.nuqlis.classmanager;
 
 import android.app.ActionBar;
 import android.app.DatePickerDialog;
+import android.app.Dialog;
 import android.app.ProgressDialog;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.text.InputType;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.DatePicker;
+import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.TextView;
@@ -33,6 +38,9 @@ import java.util.List;
 public class roll_activity extends AppCompatActivity {
     private String schoolTimeID;
     private ProgressDialog progress;
+    private Boolean isConnected;
+    private String date;
+    private int totalHour;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,32 +48,71 @@ public class roll_activity extends AppCompatActivity {
         setContentView(R.layout.activity_roll_activity);
 
         getSupportActionBar().setHomeButtonEnabled(true);
-        getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#3e72ff")));
 
         Bundle b = getIntent().getExtras();
         if (b != null) {
             schoolTimeID = b.getString("schoolTimeID");
-
             setTitle(b.getString("className"));
+            this.isConnected = b.getBoolean("isConnected");
+
+            if (!isConnected) {
+                getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#B71C1C")));
+            } else {
+                getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#3e72ff")));
+            }
+        } else {
+            getSupportActionBar().setBackgroundDrawable(new ColorDrawable(Color.parseColor("#3e72ff")));
         }
     }
 
     @Override
     public void onStart(){
-        progress = new ProgressDialog(this, R.style.ProgressTheme);
-        progress.setMessage("กำลังดึงข้อมูล");
-        progress.show();
+        final Calendar c = Calendar.getInstance();
+        int mYear = c.get(Calendar.YEAR);
+        int mMonth = c.get(Calendar.MONTH);
+        int mDay = c.get(Calendar.DAY_OF_MONTH);
 
-        NetUtils n = new NetUtils(new NetUtils.OnTaskCompleted() {
+        DatePickerDialog dpd = new DatePickerDialog(this,
+                new DatePickerDialog.OnDateSetListener() {
 
-            @Override
-            public void onTaskCompleted(String response ) {
-                GetDataCallback(response);
+                    @Override
+                    public void onDateSet(DatePicker view, int year,  int monthOfYear, int dayOfMonth) {
+                            date = year + "/" + (monthOfYear + 1 ) + "/" + dayOfMonth;
+                            DatePickerCallback();
+                    }
+
+                }, mYear, mMonth, mDay);
+        dpd.show();
+        dpd.setButton(DialogInterface.BUTTON_NEGATIVE, "ยกเลิก", new DialogInterface.OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+                if (which == DialogInterface.BUTTON_NEGATIVE) {
+                    onBackPressed();
+                }
             }
         });
 
-        n.execute("http://newtestnew.azurewebsites.net/ServiceControl/Service.svc/GetAttendData?schoolTimeID=" + schoolTimeID + "&date=2015/09/03");
         super.onStart();
+    }
+
+    public void DatePickerCallback() {
+        if (isConnected) {
+            Log.d("ROLL", "GET ONLINE");
+            progress = new ProgressDialog(this, R.style.ProgressTheme);
+            progress.setMessage("กำลังดึงข้อมูล");
+            progress.show();
+
+            NetUtils n = new NetUtils(new NetUtils.OnTaskCompleted() {
+                @Override
+                public void onTaskCompleted(String response ) {
+                    GetDataCallback(response);
+                }
+            });
+
+            n.execute("http://newtestnew.azurewebsites.net/ServiceControl/Service.svc/GetAttendData?schoolTimeID=" + schoolTimeID + "&date=" + date);
+        } else {
+            Log.d("ROLL", "GET OFFLINE");
+            GetOfflineData();
+        }
     }
 
     @Override
@@ -89,7 +136,7 @@ public class roll_activity extends AppCompatActivity {
                 super.onBackPressed();
                 return true;
             case R.id.action_save_roll:
-                SaveAttendData();
+                ShowTotalHourDialog();
                 return true;
         }
 
@@ -97,76 +144,119 @@ public class roll_activity extends AppCompatActivity {
     }
 
 
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        this.finish();
 
-    public void SaveAttendData() {
+    }
+
+    public void ShowTotalHourDialog() {
         progress = new ProgressDialog(this, R.style.ProgressTheme);
         progress.setMessage("กำลังบันทึกข้อมูล");
 
-        final Calendar c = Calendar.getInstance();
-        int mYear = c.get(Calendar.YEAR);
-        int mMonth = c.get(Calendar.MONTH);
-        int mDay = c.get(Calendar.DAY_OF_MONTH);
+        AlertDialog.Builder builder = new AlertDialog.Builder(this);
+        builder.setTitle("จำนวนคาบ");
 
-        DatePickerDialog dpd = new DatePickerDialog(this,
-                new DatePickerDialog.OnDateSetListener() {
+        final EditText input = new EditText(this);
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_CLASS_NUMBER);
+        builder.setView(input);
 
+        builder.setPositiveButton("ตกลง", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                totalHour = Integer.parseInt(input.getText().toString());
+                SaveAttendData();
+            }
+        });
+        builder.setNegativeButton("ยกเลิก", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                dialog.cancel();
+            }
+        });
+
+        builder.show();
+    }
+
+    public void SaveAttendData() {
+        if (isConnected) {
+            try {
+                progress.show();
+                NetUtils post = new NetUtils(new NetUtils.OnTaskCompleted() {
                     @Override
-                    public void onDateSet(DatePicker view, int year,  int monthOfYear, int dayOfMonth) {
-                        try {
-                            progress.show();
-                            NetUtils post = new NetUtils(new NetUtils.OnTaskCompleted() {
-                                @Override
-                                public void onTaskCompleted(String response) {
-                                    SaveDataCallback(response);
-                                }
-                            });
+                    public void onTaskCompleted(String response) {
+                        SaveDataCallback(response);
+                    }
+                });
 
-                            SharedPreferences pref = getApplicationContext().getSharedPreferences(getString(R.string.user_data), 0);
-                            UserPref user = new UserPref(pref);
+                SharedPreferences pref = getApplicationContext().getSharedPreferences(getString(R.string.user_data), 0);
+                UserPref user = new UserPref(pref);
 
-                            String staffID = user.GetStaffID();
-                            String hostID = user.GetHostID();
+                String staffID = user.GetStaffID();
+                String hostID = user.GetHostID();
 
 
-                            JSONObject obj = new JSONObject();
-                            obj.put("totalhour", 1);
+                JSONObject obj = new JSONObject();
+                obj.put("totalhour", totalHour);
 
-                            JSONArray data = new JSONArray();
+                JSONArray data = new JSONArray();
+                ListView list = (ListView) findViewById(R.id.student_list);
 
-                            ListView list = (ListView) findViewById(R.id.student_list);
-                            int count = list.getAdapter().getCount();
+                int count = list.getAdapter().getCount();
+                Log.d("ROLL", "count" + count);
+                Log.d("ROLL", "count child" + list.getChildCount());
 
-                            for (int i = 0; i < count; i++) {
-                                HashMap<String, String> map = (HashMap<String, String>) list.getAdapter().getItem(i);
-                                Spinner spinner = (Spinner) list.getChildAt(i).findViewById(R.id.attend_spinner);
+                for (int i = 0; i < count; i++) {
+                    HashMap<String, String> map = (HashMap<String, String>) list.getAdapter().getItem(i);
+                    View parentView = getViewByPosition(i, list);
+                    Spinner spinner = (Spinner) parentView.findViewById(R.id.attend_spinner);
 
-                                JSONArray att = new JSONArray();
-                                if (!spinner.getSelectedItem().toString().equals("มา")){
-                                    att.put(spinner.getSelectedItem().toString());
-                                }
+                    JSONArray att = new JSONArray();
+                    Log.d("ROLL-SAVE", spinner.getSelectedItem().toString());
+                    if (!spinner.getSelectedItem().toString().equals("มา")){
+                        att.put(spinner.getSelectedItem().toString());
 
-                                JSONObject student = new JSONObject();
-                                student.put("cid", map.get("CID"));
-                                student.put("attend", att);
-                                data.put(student);
-                            }
-
-                            obj.put("listChild", data);
-
-                            String date = year + "/" + (monthOfYear + 1 ) + "/" + dayOfMonth;
-                            post.execute("http://newtestnew.azurewebsites.net/ServiceControl/Service.svc/SaveAttendData?schoolTimeID=" + schoolTimeID + "+&date=" + date + "&hostId=" + hostID + "&staffId=" + staffID + "&data=" + URLEncoder.encode(obj.toString(), "UTF-8"));
-                            Log.d("ROLL", obj.toString());
-                            Log.d("ROLL", date);
-
-                        } catch (Exception e){
-                            Toast toast = Toast.makeText(getApplicationContext(), "ERROR : 0404", Toast.LENGTH_SHORT);
-                            toast.show();
-                        }
                     }
 
-                }, mYear, mMonth, mDay);
-        dpd.show();
+                    JSONObject student = new JSONObject();
+                    student.put("cid", map.get("CID"));
+                    student.put("attend", att);
+                    data.put(student);
+                }
 
+                obj.put("listChild", data);
+
+                post.execute("http://newtestnew.azurewebsites.net/ServiceControl/Service.svc/SaveAttendData?schoolTimeID=" + schoolTimeID + "+&date=" + date + "&hostId=" + hostID + "&staffId=" + staffID + "&data=" + URLEncoder.encode(obj.toString(), "UTF-8"));
+                Log.d("ROLL", obj.toString());
+                Log.d("ROLL", date);
+
+            } catch (Exception e){
+                Log.d("ROLL", e.getMessage());
+                Toast toast = Toast.makeText(getApplicationContext(), "ERROR : 0404", Toast.LENGTH_SHORT);
+                toast.show();
+                if(progress.isShowing())  progress.dismiss();
+            }
+        } else {
+            DBHelper db = new DBHelper(this);
+            ListView list = (ListView) findViewById(R.id.student_list);
+
+            int count = list.getAdapter().getCount();
+            Log.d("ROLL", "count" + count);
+            Log.d("ROLL", "count child" + list.getChildCount());
+
+            for (int i = 0; i < count; i++) {
+                HashMap<String, String> map = (HashMap<String, String>) list.getAdapter().getItem(i);
+                View parentView = getViewByPosition(i, list);
+                Spinner spinner = (Spinner) parentView.findViewById(R.id.attend_spinner);
+                spinner.getSelectedItem().toString();
+
+                String att = spinner.getSelectedItem().toString();
+                db.InsertAttendData(map.get("CID"), att, date);
+            }
+            db.close();
+
+        }
     }
 
     private void SaveDataCallback(String response){
@@ -188,10 +278,9 @@ public class roll_activity extends AppCompatActivity {
     }
 
     public void GetDataCallback (String response) {
-
+        Log.d("ROLL", response);
         ListView list = (ListView) findViewById(R.id.student_list);
         try {
-
             ArrayList<HashMap<String, String>> data = new ArrayList<HashMap<String, String>> ();
             JSONObject obj = new JSONObject(response);
             JSONArray d = obj.getJSONObject("data").getJSONArray("listStudent");
@@ -200,8 +289,15 @@ public class roll_activity extends AppCompatActivity {
 
                 HashMap<String, String> map = new HashMap<String, String>();
                 JSONObject o = d.getJSONObject(i);
+                map.put("isFirst", "1");
                 map.put("TITLE", o.getString("name"));
                 map.put("CID", o.getString("cid"));
+                if ( o.getJSONArray("attend").length() > 0) {
+                    map.put("ATTEND" , o.getJSONArray("attend").getString(0));
+                } else {
+                    map.put("ATTEND" , "มา");
+                }
+                Log.d("ROLL", map.get("ATTEND"));
                 data.add(map);
             }
 
@@ -217,6 +313,29 @@ public class roll_activity extends AppCompatActivity {
         }
 
         if (progress.isShowing()) progress.dismiss();
+    }
+
+    private void GetOfflineData() {
+        DBHelper db = new DBHelper(this);
+        ArrayList<HashMap<String, String>>  data = db.GetStudentInClass(schoolTimeID);
+        ListView list = (ListView) findViewById(R.id.student_list);
+
+        StudentAdapter adapter = new StudentAdapter(this, data);
+        list.setAdapter(adapter);
+        db.close();
+    }
+
+    public View getViewByPosition(int pos, ListView listView) {
+        final int firstListItemPosition = listView.getFirstVisiblePosition();
+        final int lastListItemPosition = firstListItemPosition
+                + listView.getChildCount() - 1;
+
+        if (pos < firstListItemPosition || pos > lastListItemPosition) {
+            return listView.getAdapter().getView(pos, null, listView);
+        } else {
+            final int childIndex = pos - firstListItemPosition;
+            return listView.getChildAt(childIndex);
+        }
     }
 
 }

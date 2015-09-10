@@ -143,7 +143,7 @@ public class NavigationDrawerFragment extends Fragment {
      * @param fragmentId   The android:id of this fragment in its activity's layout.
      * @param drawerLayout The DrawerLayout containing this fragment's UI.
      */
-    public void setUp(int fragmentId, DrawerLayout drawerLayout) {
+    public void setUp(int fragmentId, DrawerLayout drawerLayout, boolean isConnected) {
         mFragmentContainerView = getActivity().findViewById(fragmentId);
         mDrawerLayout = drawerLayout;
 
@@ -155,7 +155,13 @@ public class NavigationDrawerFragment extends Fragment {
         final ActionBar actionBar = getActionBar();
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setHomeButtonEnabled(true);
-        actionBar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#3e72ff")));
+
+
+        if (isConnected) {
+            actionBar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#3e72ff")));
+        } else {
+            actionBar.setBackgroundDrawable(new ColorDrawable(Color.parseColor("#B71C1C")));
+        }
         // actionBar.setElevation(1);
         // ActionBarDrawerToggle ties together the the proper interactions
         // between the navigation drawer and the action bar app icon.

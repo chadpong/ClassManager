@@ -46,7 +46,6 @@ public class ClassAdapter extends BaseAdapter {
         TextView title = (TextView)vi.findViewById(R.id.title); // title
 
         HashMap<String, String> d = data.get(position);
-
         title.setText(d.get("TITLE"));
         return vi;
     }

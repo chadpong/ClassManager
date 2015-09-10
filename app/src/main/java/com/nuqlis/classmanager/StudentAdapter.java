@@ -2,6 +2,7 @@ package com.nuqlis.classmanager;
 
 import android.app.Activity;
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -47,11 +48,31 @@ public class StudentAdapter extends BaseAdapter {
         TextView title = (TextView)vi.findViewById(R.id.student_title); // title
         final Spinner spinner = (Spinner) vi.findViewById(R.id.attend_spinner);
 
-
-
         HashMap<String, String> d = data.get(position);
 
+
         title.setText(d.get("TITLE"));
+
+        if (!d.get("isFirst").equals("0")) {
+            String att = d.get("ATTEND");
+
+            switch (att) {
+                case "มา" :
+                    spinner.setSelection(0);
+                    break;
+                case "ลา" :
+                    spinner.setSelection(1);
+                    break;
+                case "ป่วย" :
+                    spinner.setSelection(2);
+                    break;
+                case "ขาด" :
+                    spinner.setSelection(3);
+                    break;
+            }
+            data.get(position).put("isFirst", "0");
+        }
+
         return vi;
     }
 }

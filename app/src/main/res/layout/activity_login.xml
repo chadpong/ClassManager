@@ -18,7 +18,8 @@
         android:layout_below="@+id/textView"
         android:layout_alignLeft="@+id/password"
         android:layout_alignStart="@+id/password"
-        android:layout_marginTop="74dp" />
+        android:layout_marginTop="74dp"
+        android:text="teacher@kvv.com" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -29,7 +30,8 @@
         android:textCursorDrawable="@null"
         android:hint="password"
         android:layout_below="@+id/username"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:text="1234qwer" />
 
     <Button
         android:layout_width="wrap_content"

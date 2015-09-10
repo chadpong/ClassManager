@@ -30,6 +30,13 @@ public class UserPref {
         editor.commit();
     }
 
+    public void SetConnectivity (boolean isCon) {
+        editor.putBoolean("isConnected", isCon);
+        editor.commit();
+    }
+
+    public boolean IsConnected () { return  sharedPref.getBoolean("isConnected", false); }
+
     public boolean IsLoggedIn() {
         return sharedPref.getBoolean("isLoggedIn", false);
     }

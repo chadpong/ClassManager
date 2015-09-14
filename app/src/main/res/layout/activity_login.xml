@@ -36,7 +36,7 @@
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Login"
+        android:text="เข้าสู่ระบบ"
         android:id="@+id/login_button"
         style="?android:attr/borderlessButtonStyle"
         android:layout_below="@+id/password"

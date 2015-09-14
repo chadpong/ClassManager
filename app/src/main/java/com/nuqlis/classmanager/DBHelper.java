@@ -116,7 +116,7 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public ArrayList<HashMap<String, String>> GetStudentInClass(String schoolTimeID) {
         ArrayList<HashMap<String, String>> result = new ArrayList<HashMap<String, String>>();
-        String selectQuery = "SELECT  * FROM StudentClass WHERE schoolTimeID like '" + schoolTimeID + "';";
+        String selectQuery = "SELECT StudentClass.CID, StudentClass.StudentName, AttendData.AttendType FROM StudentClass LEFT JOIN AttendData ON StudentClass.CID = AttendData.CID WHERE StudentClass.schoolTimeID like  '" + schoolTimeID + "';";
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
@@ -126,7 +126,13 @@ public class DBHelper extends SQLiteOpenHelper {
                 map.put("CID", cursor.getString(0));
                 map.put("TITLE", cursor.getString(1));
                 map.put("isFirst", "1");
-                map.put("ATTEND", "มา");
+                if (cursor.getString(2) == null) {
+                    map.put("ATTEND", "มา");
+
+                } else {
+                    map.put("ATTEND", cursor.getString(2));
+                }
+                Log.d("DB", map.get("ATTEND"));
                 result.add(map);
             } while (cursor.moveToNext());
         }
@@ -135,15 +141,17 @@ public class DBHelper extends SQLiteOpenHelper {
         return result;
     }
 
-    public void InsertAttendData(String cid, String attendType, String date) {
+    public void InsertAttendData(String cid, String attendType, String date, String schoolTimeID) {
         SQLiteDatabase db = this.getWritableDatabase();
-        db.delete("AttendData", "cid = '" + cid + "' AND AttendDate ='" + date + "'", null);
+        db.delete("AttendData", "cid = '" + cid + "' AND AttendDate ='" + date + "' AND SchoolTimeID ='" + schoolTimeID + "'", null);
 
         ContentValues values = new ContentValues();
         values.put("CID", cid);
+        values.put("SchoolTimeID", schoolTimeID);
         values.put("AttendDate", date);
-        values.put("AttendType", attendType);
-        values.put("Sync", false);
+        values.put("AttendType",  attendType);
+        values.put("Sync", "0");
+
         db.insert("AttendData", null, values);
         db.close();
     }

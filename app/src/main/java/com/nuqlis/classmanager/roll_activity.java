@@ -41,6 +41,7 @@ public class roll_activity extends AppCompatActivity {
     private Boolean isConnected;
     private String date;
     private int totalHour;
+    private JSONObject userJSon;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -48,6 +49,8 @@ public class roll_activity extends AppCompatActivity {
         setContentView(R.layout.activity_roll_activity);
 
         getSupportActionBar().setHomeButtonEnabled(true);
+
+        progress = new ProgressDialog(this, R.style.ProgressTheme);
 
         Bundle b = getIntent().getExtras();
         if (b != null) {
@@ -96,9 +99,7 @@ public class roll_activity extends AppCompatActivity {
 
     public void DatePickerCallback() {
         if (isConnected) {
-            Log.d("ROLL", "GET ONLINE");
-            progress = new ProgressDialog(this, R.style.ProgressTheme);
-            progress.setMessage("กำลังดึงข้อมูล");
+            progress.setMessage("กำลังดาว์นโหลดข้อมูล");
             progress.show();
 
             NetUtils n = new NetUtils(new NetUtils.OnTaskCompleted() {
@@ -114,6 +115,8 @@ public class roll_activity extends AppCompatActivity {
             GetOfflineData();
         }
     }
+
+
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -136,7 +139,12 @@ public class roll_activity extends AppCompatActivity {
                 super.onBackPressed();
                 return true;
             case R.id.action_save_roll:
-                ShowTotalHourDialog();
+                if (isConnected) {
+                    userJSon = GetUserData();
+                    ShowTotalHourDialog();
+                } else {
+                    SaveOfflineData();
+                }
                 return true;
         }
 
@@ -152,8 +160,6 @@ public class roll_activity extends AppCompatActivity {
     }
 
     public void ShowTotalHourDialog() {
-        progress = new ProgressDialog(this, R.style.ProgressTheme);
-        progress.setMessage("กำลังบันทึกข้อมูล");
 
         AlertDialog.Builder builder = new AlertDialog.Builder(this);
         builder.setTitle("จำนวนคาบ");
@@ -166,7 +172,7 @@ public class roll_activity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 totalHour = Integer.parseInt(input.getText().toString());
-                SaveAttendData();
+                SaveOnlineData();
             }
         });
         builder.setNegativeButton("ยกเลิก", new DialogInterface.OnClickListener() {
@@ -179,26 +185,39 @@ public class roll_activity extends AppCompatActivity {
         builder.show();
     }
 
-    public void SaveAttendData() {
-        if (isConnected) {
+    public void SaveOnlineData() {
+        try {
+            userJSon.put("totalhour", totalHour);
+
+            progress = new ProgressDialog(this, R.style.ProgressTheme);
+            progress.setMessage("กำลังบันทึกข้อมูล");
+            progress.show();
+            NetUtils post = new NetUtils(new NetUtils.OnTaskCompleted() {
+                @Override
+                public void onTaskCompleted(String response) {
+                    SaveDataCallback(response);
+                }
+            });
+
+            SharedPreferences pref = getApplicationContext().getSharedPreferences(getString(R.string.user_data), 0);
+            UserPref user = new UserPref(pref);
+
+            String staffID = user.GetStaffID();
+            String hostID = user.GetHostID();
+
+            post.execute("http://newtestnew.azurewebsites.net/ServiceControl/Service.svc/SaveAttendData?schoolTimeID=" + schoolTimeID + "+&date=" + date + "&hostId=" + hostID + "&staffId=" + staffID + "&data=" + URLEncoder.encode(userJSon.toString(), "UTF-8"));
+            Log.d("ROLL", userJSon.toString());
+
+        } catch (Exception e) {
+            Toast.makeText(getApplicationContext(), "ERROR : 0405", Toast.LENGTH_SHORT);
+            progress.dismiss();
+        }
+
+    }
+
+    public JSONObject GetUserData() {
+        JSONObject obj = new JSONObject();
             try {
-                progress.show();
-                NetUtils post = new NetUtils(new NetUtils.OnTaskCompleted() {
-                    @Override
-                    public void onTaskCompleted(String response) {
-                        SaveDataCallback(response);
-                    }
-                });
-
-                SharedPreferences pref = getApplicationContext().getSharedPreferences(getString(R.string.user_data), 0);
-                UserPref user = new UserPref(pref);
-
-                String staffID = user.GetStaffID();
-                String hostID = user.GetHostID();
-
-
-                JSONObject obj = new JSONObject();
-                obj.put("totalhour", totalHour);
 
                 JSONArray data = new JSONArray();
                 ListView list = (ListView) findViewById(R.id.student_list);
@@ -227,9 +246,6 @@ public class roll_activity extends AppCompatActivity {
 
                 obj.put("listChild", data);
 
-                post.execute("http://newtestnew.azurewebsites.net/ServiceControl/Service.svc/SaveAttendData?schoolTimeID=" + schoolTimeID + "+&date=" + date + "&hostId=" + hostID + "&staffId=" + staffID + "&data=" + URLEncoder.encode(obj.toString(), "UTF-8"));
-                Log.d("ROLL", obj.toString());
-                Log.d("ROLL", date);
 
             } catch (Exception e){
                 Log.d("ROLL", e.getMessage());
@@ -237,30 +253,34 @@ public class roll_activity extends AppCompatActivity {
                 toast.show();
                 if(progress.isShowing())  progress.dismiss();
             }
-        } else {
-            DBHelper db = new DBHelper(this);
-            ListView list = (ListView) findViewById(R.id.student_list);
 
-            int count = list.getAdapter().getCount();
-            Log.d("ROLL", "count" + count);
-            Log.d("ROLL", "count child" + list.getChildCount());
+        return obj;
+    }
 
-            for (int i = 0; i < count; i++) {
-                HashMap<String, String> map = (HashMap<String, String>) list.getAdapter().getItem(i);
-                View parentView = getViewByPosition(i, list);
-                Spinner spinner = (Spinner) parentView.findViewById(R.id.attend_spinner);
-                spinner.getSelectedItem().toString();
+    private void SaveOfflineData(){
+        DBHelper db = new DBHelper(this);
+        ListView list = (ListView) findViewById(R.id.student_list);
 
-                String att = spinner.getSelectedItem().toString();
-                db.InsertAttendData(map.get("CID"), att, date);
-            }
-            db.close();
+        int count = list.getAdapter().getCount();
+        Log.d("ROLL", "count" + count);
+        Log.d("ROLL", "count child" + list.getChildCount());
 
+        for (int i = 0; i < count; i++) {
+            HashMap<String, String> map = (HashMap<String, String>) list.getAdapter().getItem(i);
+            View parentView = getViewByPosition(i, list);
+            Spinner spinner = (Spinner) parentView.findViewById(R.id.attend_spinner);
+
+            String att = spinner.getSelectedItem().toString();
+            Log.d("ROLL-SAVE", att);
+            db.InsertAttendData(map.get("CID"), att, date, schoolTimeID);
         }
+        db.close();
+
+        GetOfflineData();
     }
 
     private void SaveDataCallback(String response){
-        Log.d("ROLL", response);
+        //Log.d("ROLL", response);
 
         try {
             JSONObject obj = new JSONObject(response);
@@ -269,16 +289,18 @@ public class roll_activity extends AppCompatActivity {
             } else {
                 Toast toast = Toast.makeText(getApplicationContext(), "ERROR : 0403", Toast.LENGTH_SHORT);
                 toast.show();
+                DatePickerCallback();
             }
         } catch ( JSONException ex) {
             Toast toast = Toast.makeText(getApplicationContext(), "ERROR : 0402", Toast.LENGTH_LONG);
             toast.show();
         }
+
         if (progress.isShowing()) progress.dismiss();
     }
 
     public void GetDataCallback (String response) {
-        Log.d("ROLL", response);
+        //Log.d("ROLL", response);
         ListView list = (ListView) findViewById(R.id.student_list);
         try {
             ArrayList<HashMap<String, String>> data = new ArrayList<HashMap<String, String>> ();
@@ -297,16 +319,15 @@ public class roll_activity extends AppCompatActivity {
                 } else {
                     map.put("ATTEND" , "มา");
                 }
-                Log.d("ROLL", map.get("ATTEND"));
+                //Log.d("ROLL", map.get("ATTEND"));
                 data.add(map);
             }
 
             StudentAdapter adapter = new StudentAdapter(this, data);
             list.setAdapter(adapter);
-
-
             //Toast toast = Toast.makeText(this, obj.getString("status"), Toast.LENGTH_SHORT);
             //toast.show();
+
         } catch ( JSONException ex) {
             Toast toast = Toast.makeText(this, "ERROR : 0401", Toast.LENGTH_SHORT);
             toast.show();

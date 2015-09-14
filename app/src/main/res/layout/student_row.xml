@@ -45,6 +45,7 @@
         android:id="@+id/attend_spinner"
         android:textSize="14sp"
         android:entries="@array/attend_type"
+        android:animateLayoutChanges="true"
         android:layout_centerVertical="true"
         android:layout_alignParentRight="true"/>
     <!-- Rightend Arrow -->

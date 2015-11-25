@@ -21,7 +21,7 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 
-public class classroom_fragment extends Fragment {
+public class MorningFragment extends Fragment {
     View v;
     ListView list;
     private ProgressDialog progress;
@@ -57,7 +57,7 @@ public class classroom_fragment extends Fragment {
                 }
             });
 
-            n.execute("http://newtestnew.azurewebsites.net/ServiceControl/Service.svc/GetTeacherCourse?year=2015&semester=1&staffId="+ staffID +"&hostId=" + hostID);
+            // n.execute("http://newtestnew.azurewebsites.net/ServiceControl/Service.svc/GetTeacherCourse?year=2015&semester=1&staffId="+ staffID +"&hostId=" + hostID);
         } else {
             GetOfflineData();
         }

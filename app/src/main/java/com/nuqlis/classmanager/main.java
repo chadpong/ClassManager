@@ -178,6 +178,8 @@ public class main extends AppCompatActivity implements NavigationDrawerFragment.
                 fragmentManager.beginTransaction().replace(R.id.container,fragment).commit();
                 break;
             case 2:
+                break;
+            case 3:
                 DialogInterface.OnClickListener dialogClickListener = new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {

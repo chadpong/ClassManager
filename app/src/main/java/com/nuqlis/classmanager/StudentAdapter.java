@@ -22,6 +22,8 @@ public class StudentAdapter extends BaseAdapter {
     private ArrayList<HashMap<Integer, Boolean>> spinnerIndex;
     private static LayoutInflater inflater=null;
 
+    private int totalHour = 1;
+
     public StudentAdapter(Activity a, ArrayList<HashMap<String, String>> d) {
         activity = a;
         data=d;
@@ -41,6 +43,10 @@ public class StudentAdapter extends BaseAdapter {
         return position;
     }
 
+    public void SetSpinnerVisibility(int c) {
+        totalHour = c;
+    }
+
     public View getView(int position, View convertView, ViewGroup parent) {
         View vi=convertView;
 
@@ -52,6 +58,10 @@ public class StudentAdapter extends BaseAdapter {
         final HashMap<String, String>  d = data.get(position);
         TextView title = (TextView)vi.findViewById(R.id.student_title); // title
         final Spinner spinner = (Spinner) vi.findViewById(R.id.attend_spinner);
+        final Spinner spinner2 = (Spinner) vi.findViewById(R.id.attend_spinner2);
+        final Spinner spinner3 = (Spinner) vi.findViewById(R.id.attend_spinner3);
+        final Spinner spinner4 = (Spinner) vi.findViewById(R.id.attend_spinner4);
+        final Spinner spinner5 = (Spinner) vi.findViewById(R.id.attend_spinner5);
 
         /*
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -75,30 +85,116 @@ public class StudentAdapter extends BaseAdapter {
 
 
 
-        String att = d.get("ATTEND");
-        switch (att) {
+        String att1 = d.get("ATTEND0");
+        switch (att1) {
             case "มา" :
-                Log.d("STUDENT", d.get("ATTEND") + " 0");
                 spinner.setSelection(0, true);
                 break;
             case "ลา" :
-                Log.d("STUDENT", d.get("ATTEND") + " 1");
                 spinner.setSelection(1,  true);
                 break;
             case "ป่วย" :
-                Log.d("STUDENT", d.get("ATTEND") + " 2");
                 spinner.setSelection(2,  true);
                 break;
             case "ขาด" :
-                Log.d("STUDENT", d.get("ATTEND") + " 3");
                 spinner.setSelection(3, true);
                 break;
         }
 
+        if (d.get("ATTEND1") != null) {
+            String att2 =  d.get("ATTEND1");
+            switch (att2) {
+                case "มา" :
+                    spinner2.setSelection(0, true);
+                    break;
+                case "ลา" :
+                    spinner2.setSelection(1,  true);
+                    break;
+                case "ป่วย" :
+                    spinner2.setSelection(2,  true);
+                    break;
+                case "ขาด" :
+                    spinner2.setSelection(3, true);
+                    break;
+            }
+        }
+
+        if (d.get("ATTEND2") != null) {
+            String att3 =  d.get("ATTEND2");
+            switch (att3) {
+                case "มา" :
+                    spinner3.setSelection(0, true);
+                    break;
+                case "ลา" :
+                    spinner3.setSelection(1,  true);
+                    break;
+                case "ป่วย" :
+                    spinner3.setSelection(2,  true);
+                    break;
+                case "ขาด" :
+                    spinner3.setSelection(3, true);
+                    break;
+            }
+        }
+
+        if (d.get("ATTEND3") != null) {
+            String att4 =  d.get("ATTEND3");
+            switch (att4) {
+                case "มา" :
+                    spinner4.setSelection(0, true);
+                    break;
+                case "ลา" :
+                    spinner4.setSelection(1,  true);
+                    break;
+                case "ป่วย" :
+                    spinner4.setSelection(2,  true);
+                    break;
+                case "ขาด" :
+                    spinner4.setSelection(3, true);
+                    break;
+            }
+        }
+
+        if (d.get("ATTEND4") != null) {
+            String att5 =  d.get("ATTEND4");
+            switch (att5) {
+                case "มา" :
+                    spinner5.setSelection(0, true);
+                    break;
+                case "ลา" :
+                    spinner5.setSelection(1,  true);
+                    break;
+                case "ป่วย" :
+                    spinner5.setSelection(2,  true);
+                    break;
+                case "ขาด" :
+                    spinner5.setSelection(3, true);
+                    break;
+            }
+        }
 
         title.setText(d.get("TITLE"));
 
-
+        switch (totalHour) {
+            case 1:
+                spinner2.setVisibility(View.GONE);
+                spinner3.setVisibility(View.GONE);
+                spinner4.setVisibility(View.GONE);
+                spinner5.setVisibility(View.GONE);
+                break;
+            case 2:
+                spinner3.setVisibility(View.GONE);
+                spinner4.setVisibility(View.GONE);
+                spinner5.setVisibility(View.GONE);
+                break;
+            case 3:
+                spinner4.setVisibility(View.GONE);
+                spinner5.setVisibility(View.GONE);
+                break;
+            case 4:
+                spinner5.setVisibility(View.GONE);
+                break;
+        }
 
 
 

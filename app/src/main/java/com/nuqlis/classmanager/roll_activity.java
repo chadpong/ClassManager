@@ -9,6 +9,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.graphics.drawable.ColorDrawable;
+import android.os.Handler;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -28,6 +29,7 @@ import android.widget.Toast;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
+import org.w3c.dom.Text;
 
 import java.net.URLEncoder;
 import java.util.ArrayList;
@@ -55,6 +57,7 @@ public class roll_activity extends AppCompatActivity {
         Bundle b = getIntent().getExtras();
         if (b != null) {
             schoolTimeID = b.getString("schoolTimeID");
+            Toast.makeText(getApplicationContext(), schoolTimeID, Toast.LENGTH_SHORT).show();
             setTitle(b.getString("className"));
             this.isConnected = b.getBoolean("isConnected");
 
@@ -141,7 +144,7 @@ public class roll_activity extends AppCompatActivity {
             case R.id.action_save_roll:
                 if (isConnected) {
                     userJSon = GetUserData();
-                    ShowTotalHourDialog();
+                    SaveOnlineData();
                 } else {
                     SaveOfflineData();
                 }
@@ -154,8 +157,8 @@ public class roll_activity extends AppCompatActivity {
 
     @Override
     public void onBackPressed() {
-        super.onBackPressed();
         this.finish();
+        super.onBackPressed();
 
     }
 
@@ -172,7 +175,15 @@ public class roll_activity extends AppCompatActivity {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 totalHour = Integer.parseInt(input.getText().toString());
-                SaveOnlineData();
+
+                TextView t  = (TextView) findViewById(R.id.card_view_line1);
+                t.setText("จำนวน " + totalHour + " คาบ");
+
+                ListView list = (ListView) findViewById(R.id.student_list);
+                StudentAdapter a = (StudentAdapter) list.getAdapter();
+                a.SetSpinnerVisibility(totalHour);
+                list.setAdapter(a);
+
             }
         });
         builder.setNegativeButton("ยกเลิก", new DialogInterface.OnClickListener() {
@@ -205,11 +216,12 @@ public class roll_activity extends AppCompatActivity {
             String staffID = user.GetStaffID();
             String hostID = user.GetHostID();
 
+            Log.e("LOG URL", "http://newtestnew.azurewebsites.net/ServiceControl/Service.svc/SaveAttendData?schoolTimeID=" + schoolTimeID + "+&date=" + date + "&hostId=" + hostID + "&staffId=" + staffID + "&data=" + URLEncoder.encode(userJSon.toString(), "UTF-8"));
             post.execute("http://newtestnew.azurewebsites.net/ServiceControl/Service.svc/SaveAttendData?schoolTimeID=" + schoolTimeID + "+&date=" + date + "&hostId=" + hostID + "&staffId=" + staffID + "&data=" + URLEncoder.encode(userJSon.toString(), "UTF-8"));
             Log.d("ROLL", userJSon.toString());
 
         } catch (Exception e) {
-            Toast.makeText(getApplicationContext(), "ERROR : 0405", Toast.LENGTH_SHORT);
+            Toast.makeText(getApplicationContext(), "ERROR : 0405", Toast.LENGTH_SHORT).show();
             progress.dismiss();
         }
 
@@ -230,12 +242,28 @@ public class roll_activity extends AppCompatActivity {
                     HashMap<String, String> map = (HashMap<String, String>) list.getAdapter().getItem(i);
                     View parentView = getViewByPosition(i, list);
                     Spinner spinner = (Spinner) parentView.findViewById(R.id.attend_spinner);
+                    Spinner spinner2 = (Spinner) parentView.findViewById(R.id.attend_spinner2);
+                    Spinner spinner3 = (Spinner) parentView.findViewById(R.id.attend_spinner3);
+                    Spinner spinner4 = (Spinner) parentView.findViewById(R.id.attend_spinner4);
+                    Spinner spinner5 = (Spinner) parentView.findViewById(R.id.attend_spinner5);
+
 
                     JSONArray att = new JSONArray();
                     Log.d("ROLL-SAVE", spinner.getSelectedItem().toString());
-                    if (!spinner.getSelectedItem().toString().equals("มา")){
-                        att.put(spinner.getSelectedItem().toString());
 
+                    att.put(spinner.getSelectedItem().toString());
+
+                    if (totalHour > 1) {
+                            att.put(spinner2.getSelectedItem().toString());
+                    }
+                    if (totalHour > 2) {
+                            att.put(spinner3.getSelectedItem().toString());
+                    }
+                    if (totalHour > 3) {
+                            att.put(spinner4.getSelectedItem().toString());
+                    }
+                    if (totalHour > 4) {
+                            att.put(spinner5.getSelectedItem().toString());
                     }
 
                     JSONObject student = new JSONObject();
@@ -243,6 +271,7 @@ public class roll_activity extends AppCompatActivity {
                     student.put("attend", att);
                     data.put(student);
                 }
+                list.invalidate();
 
                 obj.put("listChild", data);
 
@@ -257,7 +286,8 @@ public class roll_activity extends AppCompatActivity {
         return obj;
     }
 
-    private void SaveOfflineData(){
+
+    private void SaveOfflineData() {
         DBHelper db = new DBHelper(this);
         ListView list = (ListView) findViewById(R.id.student_list);
 
@@ -269,14 +299,40 @@ public class roll_activity extends AppCompatActivity {
             HashMap<String, String> map = (HashMap<String, String>) list.getAdapter().getItem(i);
             View parentView = getViewByPosition(i, list);
             Spinner spinner = (Spinner) parentView.findViewById(R.id.attend_spinner);
+            Spinner spinner2 = (Spinner) parentView.findViewById(R.id.attend_spinner2);
+            Spinner spinner3 = (Spinner) parentView.findViewById(R.id.attend_spinner3);
+            Spinner spinner4 = (Spinner) parentView.findViewById(R.id.attend_spinner4);
+            Spinner spinner5 = (Spinner) parentView.findViewById(R.id.attend_spinner5);
 
-            String att = spinner.getSelectedItem().toString();
-            Log.d("ROLL-SAVE", att);
-            db.InsertAttendData(map.get("CID"), att, date, schoolTimeID);
+            String att;
+            if (totalHour > 1) {
+                att = spinner.getSelectedItem().toString() + "," + spinner2.getSelectedItem().toString();
+            } else {
+                att = spinner.getSelectedItem().toString();
+            }
+
+            if (totalHour > 2) {
+                att += ","  + spinner3.getSelectedItem().toString();
+            }
+
+            if (totalHour > 3) {
+                att += ","  + spinner4.getSelectedItem().toString();
+            }
+
+            if (totalHour > 4) {
+                att += ","  + spinner5.getSelectedItem().toString();
+            }
+
+
+            db.InsertAttendData(map.get("CID"), att, date, schoolTimeID, totalHour);
         }
         db.close();
 
         GetOfflineData();
+    }
+
+    public void setTotalHour(View v) {
+        ShowTotalHourDialog();
     }
 
     private void SaveDataCallback(String response){
@@ -287,8 +343,8 @@ public class roll_activity extends AppCompatActivity {
             if ( obj.getString("status").equals("OK")) {
                 Toast.makeText(getApplicationContext(), " บันทึกเสร็จสมบูรณ์ ", Toast.LENGTH_SHORT).show();
             } else {
-                Toast toast = Toast.makeText(getApplicationContext(), "ERROR : 0403", Toast.LENGTH_SHORT);
-                toast.show();
+                Toast.makeText(getApplicationContext(), "ERROR : 0403", Toast.LENGTH_SHORT).show();
+
                 DatePickerCallback();
             }
         } catch ( JSONException ex) {
@@ -300,12 +356,22 @@ public class roll_activity extends AppCompatActivity {
     }
 
     public void GetDataCallback (String response) {
-        //Log.d("ROLL", response);
+        Log.d("ROLL", response);
         ListView list = (ListView) findViewById(R.id.student_list);
         try {
             ArrayList<HashMap<String, String>> data = new ArrayList<HashMap<String, String>> ();
             JSONObject obj = new JSONObject(response);
             JSONArray d = obj.getJSONObject("data").getJSONArray("listStudent");
+            TextView hourCount = (TextView) findViewById(R.id.card_view_line1);
+            String totalHourString = obj.getJSONObject("data").getString("totalHour");
+
+            if (totalHourString.equals("0")) {
+                hourCount.setText("จำนวน 1 คาบ");
+                totalHour = 1;
+            } else {
+                hourCount.setText("จำนวน " + totalHourString + " คาบ");
+                totalHour = Integer.parseInt(totalHourString);
+            }
 
             for(int i = 0; i < d.length(); i++){
 
@@ -314,19 +380,20 @@ public class roll_activity extends AppCompatActivity {
                 map.put("isFirst", "1");
                 map.put("TITLE", o.getString("name"));
                 map.put("CID", o.getString("cid"));
+                Log.d("attend" ,o.getJSONArray("attend").toString());
                 if ( o.getJSONArray("attend").length() > 0) {
-                    map.put("ATTEND" , o.getJSONArray("attend").getString(0));
+                   for(int j =0; j < o.getJSONArray("attend").length(); j++) {
+                       map.put("ATTEND" + j , o.getJSONArray("attend").getString(j));
+                   }
                 } else {
-                    map.put("ATTEND" , "มา");
+                    map.put("ATTEND0" , "มา");
                 }
-                //Log.d("ROLL", map.get("ATTEND"));
                 data.add(map);
             }
 
             StudentAdapter adapter = new StudentAdapter(this, data);
+            adapter.SetSpinnerVisibility(totalHour);
             list.setAdapter(adapter);
-            //Toast toast = Toast.makeText(this, obj.getString("status"), Toast.LENGTH_SHORT);
-            //toast.show();
 
         } catch ( JSONException ex) {
             Toast toast = Toast.makeText(this, "ERROR : 0401", Toast.LENGTH_SHORT);

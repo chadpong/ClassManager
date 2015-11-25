@@ -60,7 +60,7 @@ public class login extends AppCompatActivity {
                 }
             });
 
-            n.execute("http://lcmservicetest.azurewebsites.net/servicecontrol/service.svc/login?username=" + uname + "&password=" + pwd + "&src=03");
+            n.execute("http://newtestnew.azurewebsites.net/servicecontrol/service.svc/login?username=" + uname + "&password=" + pwd + "&src=03");
 
         } else {
             Toast.makeText(getApplicationContext(), "No Internet Connection", Toast.LENGTH_SHORT).show();
@@ -68,7 +68,6 @@ public class login extends AppCompatActivity {
     }
 
     private void validateCredentials(String jsonString) {
-
         try {
             JSONObject obj = new JSONObject(jsonString);
             if ( obj.getString("Status").equals("OK")) {
@@ -85,7 +84,7 @@ public class login extends AppCompatActivity {
                 toast.show();
             }
         } catch ( JSONException ex) {
-            Toast toast = Toast.makeText(getApplicationContext(), "ERROR : 0101", Toast.LENGTH_LONG);
+            Toast toast = Toast.makeText(getApplicationContext(), "ERROR : 0101 ", Toast.LENGTH_LONG);
             toast.show();
         }
         if (progress != null) {

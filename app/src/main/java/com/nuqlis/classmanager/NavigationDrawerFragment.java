@@ -115,7 +115,9 @@ public class NavigationDrawerFragment extends Fragment {
 
         data.add(new DrawerModel(R.drawable.ic_sync,"ซิงค์ข้อมูล"));
         data.add(new DrawerModel(R.drawable.ic_classroom,"เช็คชื่อ"));
+        data.add(new DrawerModel(R.drawable.ic_classroom,"เช็คชื่อหน้าเสาธง"));
         data.add(new DrawerModel(R.drawable.ic_logout,"ออกจากระบบ"));
+
 
 
         DrawerAdapter adapter = new DrawerAdapter(getActivity(), data);

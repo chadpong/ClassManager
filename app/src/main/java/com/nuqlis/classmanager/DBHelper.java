@@ -33,7 +33,7 @@ public class DBHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         db.execSQL("CREATE TABLE IF NOT EXISTS \"Classroom\" (\"SchoolTimeID\" TEXT PRIMARY KEY, \"ClassName\" TEXT );");
         db.execSQL("CREATE TABLE IF NOT EXISTS \"StudentClass\" (\"CID\" TEXT, \"StudentName\" TEXT, \"StudentNo\" INTEGER, \"StudentID\" INTEGER, \"Gender\" TEXT, \"SchoolTimeID\" TEXT );");
-        db.execSQL("CREATE TABLE IF NOT EXISTS \"AttendData\" (\"CID\" TEXT, \"SchoolTimeID\" TEXT, \"AttendDate\" TEXT, \"AttendType\" TEXT, \"SYNC\" INTEGER);");
+        db.execSQL("CREATE TABLE IF NOT EXISTS \"AttendData\" (\"CID\" TEXT, \"SchoolTimeID\" TEXT, \"AttendDate\" TEXT, \"AttendType\" TEXT,\"COUNT\" INTEGER, \"SYNC\" INTEGER);");
 
     }
 
@@ -92,7 +92,6 @@ public class DBHelper extends SQLiteOpenHelper {
         mCount.close();
         db.close();
         return  count;
-
     }
 
     public ArrayList<HashMap<String, String>> GetAllClass() {
@@ -114,9 +113,38 @@ public class DBHelper extends SQLiteOpenHelper {
         return result;
     }
 
+    public ArrayList<HashMap<String,Object>> GetUnsyncRow(){
+        ArrayList<HashMap<String, Object>> result = new ArrayList<HashMap<String, Object>>();
+
+        SQLiteDatabase db = this.getWritableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM AttendData WHERE Sync = 0;", null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                HashMap<String, Object> map = new HashMap<String, Object>();
+                map.put("CID", cursor.getString(0));
+                map.put("schoolTimeID", cursor.getString(1));
+                map.put("attendDate", cursor.getString(2));
+                map.put("attendType", cursor.getString(3));
+                map.put("count", cursor.getString(4));
+
+                result.add(map);
+
+            } while (cursor.moveToNext());
+        }
+        return result;
+    }
+
+    public void UpdateSyncedRow(String CID, String schoolTimeID) {
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues args = new ContentValues();
+        args.put("SYNC", 1);
+        db.update("AttendData", args, "CID ='" + CID + "' AND schoolTimeID = '" + schoolTimeID + "'", null);
+    }
+
     public ArrayList<HashMap<String, String>> GetStudentInClass(String schoolTimeID) {
         ArrayList<HashMap<String, String>> result = new ArrayList<HashMap<String, String>>();
-        String selectQuery = "SELECT StudentClass.CID, StudentClass.StudentName, AttendData.AttendType FROM StudentClass LEFT JOIN AttendData ON StudentClass.CID = AttendData.CID WHERE StudentClass.schoolTimeID like  '" + schoolTimeID + "';";
+        String selectQuery = "SELECT StudentClass.CID, StudentClass.StudentName, AttendData.AttendType FROM StudentClass LEFT JOIN AttendData ON StudentClass.CID = AttendData.CID AND StudentClass.SchoolTimeID = AttendData.SchoolTimeID WHERE StudentClass.schoolTimeID = '" + schoolTimeID + "';";
         SQLiteDatabase db = this.getWritableDatabase();
         Cursor cursor = db.rawQuery(selectQuery, null);
 
@@ -126,13 +154,19 @@ public class DBHelper extends SQLiteOpenHelper {
                 map.put("CID", cursor.getString(0));
                 map.put("TITLE", cursor.getString(1));
                 map.put("isFirst", "1");
-                if (cursor.getString(2) == null) {
-                    map.put("ATTEND", "มา");
-
+                if (cursor.getString(2) != null) {
+                    String temp = cursor.getString(2);
+                    if (temp.indexOf(',') > 0) {
+                        String[] split = temp.split(",");
+                        map.put("ATTEND0", split[0]);
+                        map.put("ATTEND1", split[1]);
+                    } else {
+                        map.put("ATTEND0", temp);
+                    }
                 } else {
-                    map.put("ATTEND", cursor.getString(2));
+                    map.put("ATTEND0", "มา");
                 }
-                Log.d("DB", map.get("ATTEND"));
+                //Log.d("DB", map.get("ATTEND"));
                 result.add(map);
             } while (cursor.moveToNext());
         }
@@ -141,7 +175,7 @@ public class DBHelper extends SQLiteOpenHelper {
         return result;
     }
 
-    public void InsertAttendData(String cid, String attendType, String date, String schoolTimeID) {
+    public void InsertAttendData(String cid, String attendType, String date, String schoolTimeID, int count) {
         SQLiteDatabase db = this.getWritableDatabase();
         db.delete("AttendData", "cid = '" + cid + "' AND AttendDate ='" + date + "' AND SchoolTimeID ='" + schoolTimeID + "'", null);
 
@@ -150,10 +184,20 @@ public class DBHelper extends SQLiteOpenHelper {
         values.put("SchoolTimeID", schoolTimeID);
         values.put("AttendDate", date);
         values.put("AttendType",  attendType);
-        values.put("Sync", "0");
-
+        values.put("Sync", 0);
+        values.put("Count", count);
         db.insert("AttendData", null, values);
         db.close();
+    }
+
+    public int UnsyncCount() {
+        SQLiteDatabase db = getWritableDatabase();
+        Cursor mCount= db.rawQuery("SELECT count(*) FROM AttendData WHERE Sync = 0;", null);
+        mCount.moveToFirst();
+        int count= mCount.getInt(0);
+        mCount.close();
+        db.close();
+        return  count;
     }
 
     @Override
